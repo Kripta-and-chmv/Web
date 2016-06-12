@@ -1,0 +1,136 @@
+﻿@using System.Configuration;
+@using System.Linq;
+
+@{
+    Layout = "~/_SiteLayout.cshtml";
+    Page.Title = "Похвалить человека";
+    var complete = false;
+    DataClassesDataContext dcdc = new DataClassesDataContext();
+    IQueryable<Pics> pics = from item in dcdc.Pics select item;
+}
+
+@{
+        var discription = Request["discription"];
+        if (Request.Files.Count > 0)
+        {
+            if (Request.Files[0].ContentLength > 0)
+            {
+
+                var pic = new Pics();
+                pic.Name = Request.Files[0].FileName;
+                pic.Discription = discription;
+                int id = 0;
+                if ((from projects in dcdc.Pics select projects.Id).Count() > 0)
+                {
+                    id = (from projects in dcdc.Pics select projects.Id).Max() + 1;
+                }
+                pic.Id = id;
+                dcdc.Pics.InsertOnSubmit(pic);
+
+                byte[] fileData = null;
+                using (var binaryReader = new BinaryReader(Request.Files[0].InputStream))
+                {
+                    fileData = binaryReader.ReadBytes(Request.Files[0].ContentLength);
+                }
+                using (FileStream fs = File.Create(Server.MapPath(Path.Combine("~/Content/pics/", Request.Files[0].FileName)), fileData.Count()))
+                {
+                    fs.Write(fileData, 0, fileData.Count());
+                }
+                dcdc.SubmitChanges();
+
+            }
+        }
+    }
+   @{
+       if (IsPost)
+       {
+           int buttonId = -1;
+           var idd = "";
+
+      <script>function getdetails(obj) { document.getElementById("buffer").value = obj.id; }</script>
+               idd = Request["buffer"];
+               string[] name= new string[2];
+               if (idd != null)
+               {
+                   int.TryParse(idd, out buttonId);
+                   name = idd.Split(' ');
+
+
+                   if (name.Count() > 1)
+                   {
+                       int.TryParse(name[1], out buttonId);
+                   }
+
+                   if (idd.Contains("Delete"))
+                   {
+
+                       var del = dcdc.Pics.Where(p => p.Id == buttonId).FirstOrDefault();
+                       if (del != null)
+                       {
+                           dcdc.Pics.DeleteOnSubmit(del);
+                           dcdc.Pics.Context.SubmitChanges();
+                       }
+                   }
+                   if (idd.Contains("Update"))
+                   {
+                       var upd = dcdc.Pics.Where(p => p.Id == buttonId).FirstOrDefault();
+                       if (upd != null)
+                       {
+                           upd.Discription = Request["Text " + buttonId.ToString()];
+                           dcdc.Pics.Context.SubmitChanges();
+                       }
+
+                   }
+                   dcdc.SubmitChanges();
+               }
+               //Pics b = new Pics { Id = id };
+               //dcdc.Entry(b).State = EntityState.Deleted;
+               //dcdc.SaveChanges();
+
+           }
+       }
+
+@section featured {
+    <section class="featured">
+        <div class="content-wrapper">
+            <hgroup class="title">
+                <h1>@Page.Title</h1>
+            </hgroup>
+        </div>
+    </section>
+}
+
+@helper RenderForm(bool complete, IQueryable<Pics> pics)
+{
+    @Html.ValidationSummary(true)
+    <form method="post" enctype="multipart/form-data">
+
+        <div>
+            <input id="picLoader" name="addPic" type="file" /><br />
+            <textarea id="discription" name="discription" placeholder="Описание" style="width:175px; height:75px;" resize:none;">@Session["discription"]</textarea><br />
+            <input type="submit" value="Загрузить" id="-1" /><br />
+        </div>
+    </form>
+    <div style="display:block; width:90%; margin-left:5%; margin-right:5%; align-items:center; padding: 5px; border-width: 5px; border-style: solid;" accept="image/jpeg,image/png,image/gif">
+        <form method="post">
+            <input name="buffer" id="buffer" hidden="true" value="" type="text" />
+
+            @foreach (var elem in pics)
+        {
+            <div style="display:inline-block; width:200px; border-width: 5px; border-style: double;">
+
+                <a href="~/Content/pics/@elem.Name" rel="lightgallery">
+                    <img src="~/Content/pics/@elem.Name" style="width:195px; height: 195px;" alt="" />
+                </a>
+                <textarea type="text" name="Text @elem.Id"  style="width:175px; height:75px; resize:none; margin:5%">@elem.Discription</textarea> 
+                <input id="Delete @elem.Id" name="Delete" type="submit" value="Удалить" onclick="getdetails(this)" />
+                <input id="Update @elem.Id" name="Update" type="submit" value="Обновить" onclick="getdetails(this)" />
+
+
+            </div>
+        }
+    </form>
+    </div>
+}
+
+@RenderForm(complete, pics)

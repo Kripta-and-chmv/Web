@@ -1,0 +1,44 @@
+﻿@using System.Configuration;
+@using System.Linq;
+
+@{
+    Layout = "~/_SiteLayout.cshtml";
+    Page.Title = "Похвалить человека";
+    var complete = false;
+    DataClassesDataContext dcdc = new DataClassesDataContext();
+    IQueryable<Pics> pics = from item in dcdc.Pics select item;
+}
+
+
+@section featured {
+    <section class="featured">
+        <div class="content-wrapper">
+            <hgroup class="title">
+                <h1>@Page.Title</h1>
+            </hgroup>
+        </div>
+    </section>
+}
+
+@helper RenderForm(bool complete, IQueryable<Pics> pics)
+{
+    @Html.ValidationSummary(true)
+    <a href="~/Default.cshtml"> Переключиться на режим редактирования</a>
+
+    <div>
+            @foreach (var elem in pics)
+            {
+                <div style="display:inline-block; width:200px; border-width: 5px; border-style: double;">
+
+                    <a href="~/Content/pics/@elem.Name" rel="lightgallery">
+                        <img src="~/Content/pics/@elem.Name" style="width:195px; height: 195px;" alt="" />
+                    </a>
+                    <textarea type="text" readonly="true" name="Text @elem.Id" style="width:175px; height:75px; resize:none; margin:5%">@elem.Discription</textarea>
+                   
+                </div>
+            }
+    
+    </div>
+}
+
+@RenderForm(complete, pics)

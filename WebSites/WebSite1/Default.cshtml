@@ -103,6 +103,7 @@
 @helper RenderForm(bool complete, IQueryable<Pics> pics)
 {
     @Html.ValidationSummary(true)
+    <a href="~/Galery.cshtml"> Переключиться на режим галереи</a>
     <form method="post" enctype="multipart/form-data">
 
         <div>

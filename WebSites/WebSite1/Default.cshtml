@@ -1,9 +1,9 @@
-п»ї@using System.Configuration;
+@using System.Configuration;
 @using System.Linq;
 
 @{
     Layout = "~/_SiteLayout.cshtml";
-    Page.Title = "РџРѕС…РІР°Р»РёС‚СЊ С‡РµР»РѕРІРµРєР°";
+    Page.Title = "Похвалить человека";
     var complete = false;
     DataClassesDataContext dcdc = new DataClassesDataContext();
     IQueryable<Pics> pics = from item in dcdc.Pics select item;
@@ -83,55 +83,73 @@
                    }
                    dcdc.SubmitChanges();
                }
-               //Pics b = new Pics { Id = id };
-               //dcdc.Entry(b).State = EntityState.Deleted;
-               //dcdc.SaveChanges();
+              
 
            }
        }
 
 @section featured {
     <section class="featured">
-        <div class="content-wrapper">
-            <hgroup class="title">
-                <h1>@Page.Title</h1>
-            </hgroup>
-        </div>
+        <nav class="navbar navbar-inverse" role="navigation">
+            <div class="navbar-header">
+                <a class="navbar-brand" ui-sref="#">PhotoGallery</a>
+            </div>
+            <ul class="nav navbar-nav">
+                <li><a href="Galery.cshtml">Главная</a></li>
+                <li><a href="Default.cshtml">Редактирование</a></li>
+            </ul>
+        </nav>
     </section>
 }
 
 @helper RenderForm(bool complete, IQueryable<Pics> pics)
 {
     @Html.ValidationSummary(true)
-    <a href="~/Galery.cshtml"> РџРµСЂРµРєР»СЋС‡РёС‚СЊСЃСЏ РЅР° СЂРµР¶РёРј РіР°Р»РµСЂРµРё</a>
-    <form method="post" enctype="multipart/form-data">
+    <button type="button" class="btn btn-primary btn-block btn-lg" data-toggle="modal" data-target="#myModal">Загрузить</button>
 
-        <div>
-            <input id="picLoader" name="addPic" type="file" /><br />
-            <textarea id="discription" name="discription" placeholder="РћРїРёСЃР°РЅРёРµ" style="width:175px; height:75px;" resize:none;">@Session["discription"]</textarea><br />
-            <input type="submit" value="Р—Р°РіСЂСѓР·РёС‚СЊ" id="-1" /><br />
-        </div>
-    </form>
-    <div style="display:block; width:90%; margin-left:5%; margin-right:5%; align-items:center; padding: 5px; border-width: 5px; border-style: solid;" accept="image/jpeg,image/png,image/gif">
+<!-- Modal -->
+<div id="myModal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+
+    <!-- Modal content-->
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">Добавить новую фотографию</h4>
+      </div>
+      <div class="modal-body">
+          <form method="post" enctype="multipart/form-data">
+
+              <div>
+                  <input id="picLoader" name="addPic" type="file" /><br />
+                  <textarea id="discription" name="discription" placeholder="Описание" style="width:175px; height:75px; resize:none;">@Session["discription"]</textarea><br />
+                  <input type="submit" class="btn btn-success" value="Загрузить" id="-1" /><br />
+              </div>
+          </form>
+      </div>
+      <div class="modal-footer">
+          <button type="button" class="btn btn-danger" data-dismiss="modal">Отмена</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+   
+    
         <form method="post">
             <input name="buffer" id="buffer" hidden="true" value="" type="text" />
-
             @foreach (var elem in pics)
-        {
-            <div style="display:inline-block; width:200px; border-width: 5px; border-style: double;">
-
-                <a href="~/Content/pics/@elem.Name" rel="lightgallery">
-                    <img src="~/Content/pics/@elem.Name" style="width:195px; height: 195px;" alt="" />
-                </a>
-                <textarea type="text" name="Text @elem.Id"  style="width:175px; height:75px; resize:none; margin:5%">@elem.Discription</textarea> 
-                <input id="Delete @elem.Id" name="Delete" type="submit" value="РЈРґР°Р»РёС‚СЊ" onclick="getdetails(this)" />
-                <input id="Update @elem.Id" name="Update" type="submit" value="РћР±РЅРѕРІРёС‚СЊ" onclick="getdetails(this)" />
-
-
-            </div>
-        }
-    </form>
+{
+    <div style="display:inline-block; width:220px; border-width: 5px; border-style: double; padding-left: 10px;">
+        <a href="~/Content/pics/@elem.Name" rel="lightgallery">
+            <img src="~/Content/pics/@elem.Name" style="width:195px; height: 195px;" alt="" />
+        </a>
+        <textarea type="text" name="Text @elem.Id" style="width:175px; height:75px; resize:none; margin:5%">@elem.Discription</textarea>
+        <input id="Delete @elem.Id" name="Delete" class="btn btn-danger" type="submit" value="Удалить" onclick="getdetails(this)" />
+        <input id="Update @elem.Id" name="Update" class="btn btn-info" type="submit" value="Обновить" onclick="getdetails(this)" />
     </div>
 }
-
+    </form>
+    
+}
 @RenderForm(complete, pics)

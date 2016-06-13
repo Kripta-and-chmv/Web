@@ -3,90 +3,92 @@
 
 @{
     Layout = "~/_SiteLayout.cshtml";
-    Page.Title = "Похвалить человека";
+    Page.Title = "PhotoGallery";
     var complete = false;
     DataClassesDataContext dcdc = new DataClassesDataContext();
     IQueryable<Pics> pics = from item in dcdc.Pics select item;
 }
 
 @{
-        var discription = Request["discription"];
-        if (Request.Files.Count > 0)
+    var discription = Request["discription"];
+    if (Request.Files.Count > 0)
+    {
+        if (Request.Files[0].ContentLength > 0)
         {
-            if (Request.Files[0].ContentLength > 0)
+
+            var pic = new Pics();
+            pic.Name = Request.Files[0].FileName;
+            pic.Discription = discription;
+            int id = 0;
+            if ((from projects in dcdc.Pics select projects.Id).Count() > 0)
             {
-
-                var pic = new Pics();
-                pic.Name = Request.Files[0].FileName;
-                pic.Discription = discription;
-                int id = 0;
-                if ((from projects in dcdc.Pics select projects.Id).Count() > 0)
-                {
-                    id = (from projects in dcdc.Pics select projects.Id).Max() + 1;
-                }
-                pic.Id = id;
-                dcdc.Pics.InsertOnSubmit(pic);
-
-                byte[] fileData = null;
-                using (var binaryReader = new BinaryReader(Request.Files[0].InputStream))
-                {
-                    fileData = binaryReader.ReadBytes(Request.Files[0].ContentLength);
-                }
-                using (FileStream fs = File.Create(Server.MapPath(Path.Combine("~/Content/pics/", Request.Files[0].FileName)), fileData.Count()))
-                {
-                    fs.Write(fileData, 0, fileData.Count());
-                }
-                dcdc.SubmitChanges();
-
+                id = (from projects in dcdc.Pics select projects.Id).Max() + 1;
             }
+            pic.Id = id;
+            dcdc.Pics.InsertOnSubmit(pic);
+
+            byte[] fileData = null;
+            using (var binaryReader = new BinaryReader(Request.Files[0].InputStream))
+            {
+                fileData = binaryReader.ReadBytes(Request.Files[0].ContentLength);
+            }
+            using (FileStream fs = File.Create(Server.MapPath(Path.Combine("~/Content/pics/", Request.Files[0].FileName)), fileData.Count()))
+            {
+                fs.Write(fileData, 0, fileData.Count());
+            }
+            dcdc.SubmitChanges();
+
         }
     }
-   @{
-       if (IsPost)
-       {
-           int buttonId = -1;
-           var idd = "";
+    if (IsPost)
+    {
+        int buttonId = -1;
+        var idd = "";
 
-      <script>function getdetails(obj) { document.getElementById("buffer").value = obj.id; }</script>
-               idd = Request["buffer"];
-               string[] name= new string[2];
-               if (idd != null)
-               {
-                   int.TryParse(idd, out buttonId);
-                   name = idd.Split(' ');
+        <script>
+            function getdetails(obj) {
+                document.getElementById("buffer").value = obj.id;
+            }
+        </script>
+        idd = Request["buffer"];
+        string[] name = new string[2];
+        if (idd != null)
+        {
+            int.TryParse(idd, out buttonId);
+            name = idd.Split(' ');
 
 
-                   if (name.Count() > 1)
-                   {
-                       int.TryParse(name[1], out buttonId);
-                   }
+            if (name.Count() > 1)
+            {
+                int.TryParse(name[1], out buttonId);
+            }
 
-                   if (idd.Contains("Delete"))
-                   {
+            if (idd.Contains("Delete"))
+            {
 
-                       var del = dcdc.Pics.Where(p => p.Id == buttonId).FirstOrDefault();
-                       if (del != null)
-                       {
-                           dcdc.Pics.DeleteOnSubmit(del);
-                           dcdc.Pics.Context.SubmitChanges();
-                       }
-                   }
-                   if (idd.Contains("Update"))
-                   {
-                       var upd = dcdc.Pics.Where(p => p.Id == buttonId).FirstOrDefault();
-                       if (upd != null)
-                       {
-                           upd.Discription = Request["Text " + buttonId.ToString()];
-                           dcdc.Pics.Context.SubmitChanges();
-                       }
+                var del = dcdc.Pics.FirstOrDefault(p => p.Id == buttonId);
+                if (del != null)
+                {
+                    dcdc.Pics.DeleteOnSubmit(del);
+                    dcdc.Pics.Context.SubmitChanges();
+                }
+            }
+            if (idd.Contains("Update"))
+            {
+                var upd = dcdc.Pics.FirstOrDefault(p => p.Id == buttonId);
+                if (upd != null)
+                {
+                    upd.Discription = Request["Text " + buttonId.ToString()];
+                    dcdc.Pics.Context.SubmitChanges();
+                }
 
-                   }
-                   dcdc.SubmitChanges();
-               }
-              
+            }
+            dcdc.SubmitChanges();
+        }
 
-           }
-       }
+
+    }
+}
 
 @section featured {
     <section class="featured">
@@ -105,51 +107,58 @@
 @helper RenderForm(bool complete, IQueryable<Pics> pics)
 {
     @Html.ValidationSummary(true)
-    <button type="button" class="btn btn-primary btn-block btn-lg" data-toggle="modal" data-target="#myModal">Загрузить</button>
+    <button type="button" class="btn btn-primary btn-block" data-toggle="modal" data-target="#myModal">Загрузить</button>
 
-<!-- Modal -->
-<div id="myModal" class="modal fade" role="dialog">
-  <div class="modal-dialog">
+    <!-- Modal -->
+    <div id="myModal" class="modal fade" role="dialog">
+        <div class="modal-dialog modal-sm">
 
-    <!-- Modal content-->
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal">&times;</button>
-        <h4 class="modal-title">Добавить новую фотографию</h4>
-      </div>
-      <div class="modal-body">
-          <form method="post" enctype="multipart/form-data">
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">Добавить новую фотографию</h4>
+                </div>
+                <div class="modal-body">
+                    <form method="post" enctype="multipart/form-data">
 
-              <div>
-                  <input id="picLoader" name="addPic" type="file" /><br />
-                  <textarea id="discription" name="discription" placeholder="Описание" style="width:175px; height:75px; resize:none;">@Session["discription"]</textarea><br />
-                  <input type="submit" class="btn btn-success" value="Загрузить" id="-1" /><br />
-              </div>
-          </form>
-      </div>
-      <div class="modal-footer">
-          <button type="button" class="btn btn-danger" data-dismiss="modal">Отмена</button>
-      </div>
+                        <div>
+                            <input id="picLoader" name="addPic" type="file" /><br />
+                            <textarea id="discription" name="discription" placeholder="Описание" style="width:175px; height:75px; resize:none;">@Session["discription"]</textarea><br />
+                            <input type="submit" class="btn btn-success" value="Загрузить" id="-1" /><br />
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-dismiss="modal">Отмена</button>
+                </div>
+            </div>
+
+        </div>
     </div>
 
-  </div>
-</div>
-   
-    
+    <div class="jumbotron row" style="padding-left: 20px;">
         <form method="post">
-            <input name="buffer" id="buffer" hidden="true" value="" type="text" />
+            <input name="buffer" id="buffer" hidden="true" value="" type="text"/>
             @foreach (var elem in pics)
-{
-    <div style="display:inline-block; width:220px; border-width: 5px; border-style: double; padding-left: 10px;">
-        <a href="~/Content/pics/@elem.Name" rel="lightgallery">
-            <img src="~/Content/pics/@elem.Name" style="width:195px; height: 195px;" alt="" />
-        </a>
-        <textarea type="text" name="Text @elem.Id" style="width:175px; height:75px; resize:none; margin:5%">@elem.Discription</textarea>
-        <input id="Delete @elem.Id" name="Delete" class="btn btn-danger" type="submit" value="Удалить" onclick="getdetails(this)" />
-        <input id="Update @elem.Id" name="Update" class="btn btn-info" type="submit" value="Обновить" onclick="getdetails(this)" />
+            {
+                <div class="col-md-2 col-sm-4 col-xs-6" style="display: inline-block; width: 220px; border-width: 5px; border-style: double; padding-left: 10px;">
+                    <a class="fancyimage" data-fancybox-group="group" href="~/Content/pics/@elem.Name" rel="lightgallery">
+                        <img src="~/Content/pics/@elem.Name" class="img-rounded" style="width: 195px; height: 195px;" alt=""/>
+                    </a>
+                    <div class="form-group" style="text-align: center;">
+                        <label for="comment">Описание:</label>
+                        <br />
+                        <textarea type="text" name="Text @elem.Id" style="width: 175px; height: 100px; resize: none;">@elem.Discription</textarea>
+                    </div>
+                    <input id="Delete @elem.Id" style="margin-bottom: 10px; padding-left:10px;" name="Delete" class="btn btn-danger" type="submit" value="Удалить" onclick="getdetails(this)"/>
+                    
+                    <input id="Update @elem.Id" style="margin-bottom: 10px; padding-left: 10px; " name="Update" class="btn btn-info" type="submit" value="Обновить" onclick="getdetails(this)" />
+
+                </div>
+            }
+
+        </form>
     </div>
-}
-    </form>
-    
 }
 @RenderForm(complete, pics)
